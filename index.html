@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
+    <!-- Etiquetas para que parezca una App nativa en el celular -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Yoga Calma">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3048/3048398.png">
+    
+    <title>Yoga Funcional - Caderas y Espalda</title>
+    <style>
+        :root {
+            --primary: #7b9acc;
+            --primary-dark: #5572a3;
+            --bg: #f0f4f8;
+            --text: #2c3e50;
+            --white: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body { 
+            font-family: 'Helvetica Neue', Arial, sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            background-color: var(--bg); 
+            color: var(--text);
+            padding: 20px;
+            /* Evita el scroll elástico en iOS */
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+
+        #app-container { 
+            text-align: center; 
+            background: var(--white); 
+            padding: 30px 25px; 
+            border-radius: 24px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.08); 
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h1 { 
+            color: #5d5c61; 
+            font-size: 1.3rem; 
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        #visual-aid { 
+            font-size: 60px; 
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        #exercise-name { 
+            font-size: 1.5rem; 
+            font-weight: 700; 
+            margin-bottom: 8px; 
+            color: var(--text);
+        }
+
+        #timer { 
+            font-size: 4rem; 
+            font-weight: 800; 
+            color: var(--primary); 
+            margin: 5px 0;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #instruction { 
+            font-size: 1rem; 
+            line-height: 1.5; 
+            color: #666; 
+            min-height: 90px;
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            flex-direction: column;
+        }
+
+        button { 
+            background-color: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 16px; 
+            font-size: 1.1rem; 
+            font-weight: 600;
+            border-radius: 16px; 
+            cursor: pointer; 
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        button:active {
+            opacity: 0.8;
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background-color: #f1f5f9;
+            color: #64748b;
+        }
+
+        .hidden { display: none !important; }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: #edf2f7;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <h1>🧘‍♀️ Espacio de Calma</h1>
+        
+        <div id="start-screen">
+            <div id="visual-aid">✨</div>
+            <p style="font-size: 1.1rem; font-weight: 500; margin-bottom: 5px;">Movilidad de Caderas</p>
+            <p style="color: #718096; font-size: 0.9rem; margin-bottom: 25px;">Práctica sin apoyo de muñecas.<br>Sube el volumen de tu equipo.</p>
+            <button onclick="startRoutine()">Comenzar Práctica</button>
+        </div>
+
+        <div id="workout-screen" class="hidden">
+            <div class="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+            <div id="visual-aid">🏁</div>
+            <div id="exercise-name">Preparando...</div>
+            <div id="timer">00:00</div>
+            <div id="instruction">Busca una posición cómoda para iniciar.</div>
+            
+            <div class="controls">
+                <button onclick="togglePause()" id="pause-btn">Pausar</button>
+                <button onclick="resetApp()" class="btn-secondary">Reiniciar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const exercises = [
+            { name: "Consciencia Corporal", time: 30, text: "Túmbate en el mat boca arriba. Cierra los ojos. Inhala profundo expandiendo el abdomen. Al exhalar, entrega todo el peso de tu espalda al suelo.", emoji: "🌬️" },
+            { name: "Glúteo en 4 (D)", time: 60, text: "Cruza el tobillo derecho sobre la rodilla izquierda. Tracciona el muslo izquierdo hacia tu pecho. Mantén el sacro apoyado.", emoji: "4️⃣" },
+            { name: "Glúteo en 4 (I)", time: 60, text: "Cambia de lado. Cruza tobillo izquierdo sobre rodilla derecha. Siente cómo se elonga el piramidal. Relaja la mandíbula.", emoji: "🔄" },
+            { name: "Movilidad Pélvica", time: 45, text: "Pies al ancho del mat. Deja caer las rodillas de un lado al otro suavemente. Siente el masaje en la zona lumbar.", emoji: "🚗" },
+            { name: "Puente Dinámico", time: 60, text: "Empuja el suelo con los talones y eleva la pelvis. Activa glúteos. Baja articulando vértebra por vértebra.", emoji: "🌉" },
+            { name: "Apana Asana", time: 45, text: "Abraza ambas rodillas al pecho. Balancéate lateralmente. Masajea tus riñones y descansa.", emoji: "🤗" }
+        ]
+
+        let currentExercise = 0
+        let timeLeft = 0
+        let timerInterval
+        let isPaused = false
+        let synth = window.speechSynthesis
+
+        const speak = (text) => {
+            if (synth.speaking) { synth.cancel() }
+            const utterance = new SpeechSynthesisUtterance(text)
+            utterance.lang = 'es-CL'
+            utterance.rate = 0.85
+            synth.speak(utterance)
+        }
+
+        const startRoutine = () => {
+            document.getElementById('start-screen').classList.add('hidden')
+            document.getElementById('workout-screen').classList.remove('hidden')
+            loadExercise()
+        }
+
+        const loadExercise = () => {
+            if (currentExercise >= exercises.length) {
+                finishRoutine()
+                return
+            }
+
+            const ex = exercises[currentExercise]
+            document.getElementById('exercise-name').innerText = ex.name
+            document.getElementById('visual-aid').innerText = ex.emoji
+            document.getElementById('instruction').innerText = ex.text
+            timeLeft = ex.time
+            
+            const progress = ((currentExercise) / exercises.length) * 100
+            document.getElementById('progress-bar').style.width = `${progress}%`
+            
+            speak(`${ex.name}. ${ex.text}`)
+            startCountdown()
+        }
+
+        const startCountdown = () => {
+            clearInterval(timerInterval)
+            updateTimerDisplay()
+            
+            timerInterval = setInterval(() => {
+                if (!isPaused) {
+                    timeLeft--
+                    updateTimerDisplay()
+
+                    if (timeLeft <= 0) {
+                        clearInterval(timerInterval)
+                        currentExercise++
+                        loadExercise()
+                    }
+                }
+            }, 1000)
+        }
+
+        const updateTimerDisplay = () => {
+            const minutes = Math.floor(timeLeft / 60)
+            const seconds = timeLeft % 60
+            document.getElementById('timer').innerText = 
+                `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
+        }
+
+        const togglePause = () => {
+            isPaused = !isPaused
+            const btn = document.getElementById('pause-btn')
+            btn.innerText = isPaused ? "Continuar" : "Pausar"
+            
+            if (isPaused) {
+                synth.pause()
+            } else {
+                synth.resume()
+            }
+        }
+
+        const resetApp = () => {
+            clearInterval(timerInterval)
+            synth.cancel()
+            currentExercise = 0
+            isPaused = false
+            document.getElementById('pause-btn').innerText = "Pausar"
+            document.getElementById('pause-btn').classList.remove('hidden')
+            document.getElementById('start-screen').classList.remove('hidden')
+            document.getElementById('workout-screen').classList.add('hidden')
+        }
+
+        const finishRoutine = () => {
+            document.getElementById('progress-bar').style.width = `100%`
+            document.getElementById('exercise-name').innerText = "¡Namasté!"
+            document.getElementById('instruction').innerText = "Tu cuerpo agradece este espacio de consciencia."
+            document.getElementById('timer').innerText = "✨"
+            document.getElementById('visual-aid').innerText = "🙏"
+            document.getElementById('pause-btn').classList.add('hidden')
+            speak("Práctica completada. Namasté.")
+        }
+    </script>
+</body>
+</html>
